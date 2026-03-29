@@ -28,7 +28,7 @@ public class SaleService {
     private final ProductRepository productRepository;
     private final SaleMapper saleMapper;
 
-    
+
     @Transactional
     public SaleResponseDTO create(SaleRequestDTO dto, String userId) {
 
@@ -45,7 +45,6 @@ public class SaleService {
             validateStock(product, itemDTO.quantity());
 
             product.setQuantity(product.getQuantity() - itemDTO.quantity());
-
 
             BigDecimal subtotal = product.getPrice().multiply(BigDecimal.valueOf(itemDTO.quantity()));
 
@@ -64,7 +63,9 @@ public class SaleService {
         sale.setItems(items);
         sale.setTotalAmount(total);
 
-        return saleMapper.toDTO(saleRepository.save(sale));
+        Sale savedSale = saleRepository.save(sale);
+
+        return saleMapper.toDTO(savedSale);
     }
 
     
@@ -73,7 +74,6 @@ public class SaleService {
 
         Sale sale = findSale(id);
 
-        // 🔁 devolve estoque antigo
         for (SaleItem item : sale.getItems()) {
             Product product = item.getProduct();
             product.setQuantity(product.getQuantity() + item.getQuantity());
