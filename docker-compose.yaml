@@ -1,0 +1,45 @@
+services:
+  postgres-api:
+    image: postgres:15
+    container_name: postgres-api
+    restart: always
+    environment:
+      POSTGRES_DB: mandinha_db
+      POSTGRES_USER: mandinha_user
+      POSTGRES_PASSWORD: mandinha_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_api_data:/var/lib/postgresql/data
+
+  postgres-keycloak:
+    image: postgres:15
+    container_name: postgres-keycloak
+    restart: always
+    environment:
+      POSTGRES_DB: keycloak_db
+      POSTGRES_USER: keycloak_user
+      POSTGRES_PASSWORD: keycloak_pass
+    volumes:
+      - postgres_keycloak_data:/var/lib/postgresql/data
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.3
+    container_name: keycloak
+    command: start-dev
+    depends_on:
+      - postgres-keycloak
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/keycloak_db
+      KC_DB_USERNAME: keycloak_user
+      KC_DB_PASSWORD: keycloak_pass
+
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8180:8080"
+
+volumes:
+  postgres_api_data:
+  postgres_keycloak_data:
