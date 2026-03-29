@@ -25,7 +25,7 @@ public class GlobalExceptionHandler {
     ) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }
-    
+
     @ExceptionHandler({
             ProductNotFoundException.class,
             SaleNotFoundException.class

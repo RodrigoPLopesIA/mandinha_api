@@ -9,5 +9,7 @@ import com.rodrigoplopes.mandinha_api.entities.SaleItem;
 public interface SaleItemMapper {
 
     @Mapping(target = "productName", source = "product.name")
+    @Mapping(target = "productId", source = "product.id")
+    @Mapping(target = "price", source = "product.price")
     SaleItemResponseDTO toDTO(SaleItem entity);
 }
