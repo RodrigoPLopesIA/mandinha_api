@@ -3,6 +3,8 @@ package com.rodrigoplopes.mandinha_api.services;
 import com.rodrigoplopes.mandinha_api.dtos.ProductResponseDTO;
 import com.rodrigoplopes.mandinha_api.dtos.ProductRequestDTO;
 import com.rodrigoplopes.mandinha_api.entities.Product;
+import com.rodrigoplopes.mandinha_api.exceptions.InsufficientStockException;
+import com.rodrigoplopes.mandinha_api.exceptions.ProductNotFoundException;
 import com.rodrigoplopes.mandinha_api.mappers.ProductMapper;
 import com.rodrigoplopes.mandinha_api.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +60,7 @@ public class ProductService {
         Product product = findEntityById(productId);
 
         if (product.getQuantity() < quantity) {
-            throw new RuntimeException("Insufficient stock");
+            throw new InsufficientStockException(product.getName());
         }
 
         product.setQuantity(product.getQuantity() - quantity);
@@ -67,6 +69,6 @@ public class ProductService {
 
     private Product findEntityById(String id) {
         return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ProductNotFoundException(id));
     }
 }

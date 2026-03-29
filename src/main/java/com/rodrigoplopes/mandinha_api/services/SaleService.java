@@ -5,6 +5,9 @@ import com.rodrigoplopes.mandinha_api.dtos.SaleRequestDTO;
 import com.rodrigoplopes.mandinha_api.dtos.SaleResponseDTO;
 import com.rodrigoplopes.mandinha_api.dtos.SaleItemRequestDTO;
 import com.rodrigoplopes.mandinha_api.entities.*;
+import com.rodrigoplopes.mandinha_api.exceptions.InsufficientStockException;
+import com.rodrigoplopes.mandinha_api.exceptions.ProductNotFoundException;
+import com.rodrigoplopes.mandinha_api.exceptions.SaleNotFoundException;
 import com.rodrigoplopes.mandinha_api.mappers.SaleMapper;
 import com.rodrigoplopes.mandinha_api.repository.ProductRepository;
 import com.rodrigoplopes.mandinha_api.repository.SaleRepository;
@@ -119,17 +122,17 @@ public class SaleService {
 
     private Product findProduct(String id) {
         return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ProductNotFoundException(id));
     }
 
     private Sale findSale(String id) {
         return saleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Sale not found"));
+                .orElseThrow(() -> new SaleNotFoundException(id));
     }
 
     private void validateStock(Product product, int quantity) {
         if (product.getQuantity() < quantity) {
-            throw new RuntimeException("Insufficient stock for product: " + product.getName());
+            throw new InsufficientStockException(product.getName());
         }
     }
 }
