@@ -12,10 +12,10 @@ import java.math.BigDecimal;
 public record ProductRequestDTO(
         @NotEmpty
         String name,
-        @NotEmpty
+        @NotNull
         @Positive
         int quantity,
-        @NotEmpty
+        @NotNull
         @Positive
         BigDecimal price
 ) {}

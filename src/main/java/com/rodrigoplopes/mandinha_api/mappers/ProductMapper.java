@@ -8,20 +8,17 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "profileId", ignore = true)
-    @Mapping(target = "saleItems", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
+
     Product toEntity(ProductRequestDTO dto);
 
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "name", source = "name")
+    @Mapping(target = "quantity", source = "quantity")
+    @Mapping(target = "price", source = "price")
+    @Mapping(target = "profileId", source = "profileId")
+    @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(target = "updatedAt", source = "updatedAt")
     ProductResponseDTO toDTO(Product entity);
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "profileId", ignore = true)
-    @Mapping(target = "saleItems", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
     void updateEntityFromDTO(ProductRequestDTO dto, @MappingTarget Product entity);
 }

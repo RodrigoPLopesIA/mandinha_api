@@ -5,6 +5,7 @@ import com.rodrigoplopes.mandinha_api.dtos.ProductResponseDTO;
 import com.rodrigoplopes.mandinha_api.services.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/products")
 @RequiredArgsConstructor
+@Slf4j
 public class ProductController {
 
     private final ProductService service;
@@ -25,6 +27,7 @@ public class ProductController {
             @RequestBody @Valid ProductRequestDTO dto,
             @AuthenticationPrincipal Jwt jwt
     ) {
+        log.info("create({})", dto);
         String userId = jwt.getSubject();
         return ResponseEntity.ok(service.create(dto, userId));
     }
@@ -43,8 +46,12 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductResponseDTO>> findAll() {
-        return ResponseEntity.ok(service.findAll());
+    public ResponseEntity<List<ProductResponseDTO>> findAll(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate
+    ) {
+        return ResponseEntity.ok(service.findAllFiltered(name, startDate, endDate));
     }
 
     @DeleteMapping("/{id}")

@@ -46,14 +46,14 @@ public class SaleService {
 
             product.setQuantity(product.getQuantity() - itemDTO.quantity());
 
-            BigDecimal price = BigDecimal.valueOf(product.getPrice());
-            BigDecimal subtotal = price.multiply(BigDecimal.valueOf(itemDTO.quantity()));
+
+            BigDecimal subtotal = product.getPrice().multiply(BigDecimal.valueOf(itemDTO.quantity()));
 
             SaleItem item = SaleItem.builder()
                     .sale(sale)
                     .product(product)
                     .quantity(itemDTO.quantity())
-                    .unitPrice(price)
+                    .unitPrice(product.getPrice())
                     .subtotal(subtotal)
                     .build();
 
