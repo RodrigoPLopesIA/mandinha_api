@@ -17,9 +17,18 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import com.rodrigoplopes.mandinha_api.entities.Sale;
+import com.rodrigoplopes.mandinha_api.entities.SaleItem;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.math.BigDecimal;
 import java.util.*;
 
 @Service
@@ -134,9 +143,39 @@ public class SaleService {
         saleRepository.delete(sale);
     }
 
-    
-    public Page<SaleResponseDTO> findAll(Pageable pageable) {
-        return saleRepository.findAll(pageable).map(saleMapper::toDTO);
+
+    @Transactional()
+    public Page<SaleResponseDTO> findAll(
+            LocalDateTime start,
+            LocalDateTime end,
+            String productName,
+            Pageable pageable
+    ) {
+        Specification<Sale> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (start != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), start));
+            }
+
+            if (end != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), end));
+            }
+
+            if (productName != null && !productName.isBlank()) {
+                query.distinct(true);
+                // IMPORTANTE: Join de jakarta.persistence.criteria.Join
+                Join<Sale, SaleItem> itemsJoin = root.join("items");
+                predicates.add(cb.like(
+                        cb.lower(itemsJoin.get("product").get("name")),
+                        "%" + productName.toLowerCase() + "%"
+                ));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return saleRepository.findAll(spec, pageable).map(saleMapper::toDTO);
     }
 
     
