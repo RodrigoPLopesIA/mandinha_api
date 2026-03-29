@@ -11,6 +11,8 @@ import com.rodrigoplopes.mandinha_api.exceptions.SaleNotFoundException;
 import com.rodrigoplopes.mandinha_api.mappers.SaleMapper;
 import com.rodrigoplopes.mandinha_api.repository.ProductRepository;
 import com.rodrigoplopes.mandinha_api.repository.SaleRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -28,6 +30,8 @@ public class SaleService {
     private final ProductRepository productRepository;
     private final SaleMapper saleMapper;
 
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Transactional
     public SaleResponseDTO create(SaleRequestDTO dto, String userId) {
@@ -68,20 +72,51 @@ public class SaleService {
         return saleMapper.toDTO(savedSale);
     }
 
-    
+
     @Transactional
     public SaleResponseDTO update(String id, SaleRequestDTO dto) {
-
         Sale sale = findSale(id);
 
-        for (SaleItem item : sale.getItems()) {
-            Product product = item.getProduct();
-            product.setQuantity(product.getQuantity() + item.getQuantity());
+        // 1. Devolve o estoque antigo
+        for (SaleItem oldItem : sale.getItems()) {
+            Product product = oldItem.getProduct();
+            product.setQuantity(product.getQuantity() + oldItem.getQuantity());
+            productRepository.save(product);
         }
 
         sale.getItems().clear();
+        entityManager.flush();
 
-        return create(dto, sale.getProfileId());
+        // 2. Cria os novos itens
+        List<SaleItem> newItems = dto.items().stream().map(itemDto -> {
+            Product product = findProduct(itemDto.productId());
+
+            if (product.getQuantity() < itemDto.quantity()) {
+                throw new InsufficientStockException(product.getName());
+            }
+
+            product.setQuantity(product.getQuantity() - itemDto.quantity());
+            productRepository.save(product);
+
+            return SaleItem.builder()
+                    .sale(sale)
+                    .product(product)
+                    .quantity(itemDto.quantity())
+                    .unitPrice(product.getPrice())
+                    .subtotal(product.getPrice().multiply(BigDecimal.valueOf(itemDto.quantity())))
+                    .build();
+        }).toList();
+
+        BigDecimal newTotal = newItems.stream()
+                .map(SaleItem::getSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        sale.setTotalAmount(newTotal);
+        sale.getItems().addAll(newItems);
+        sale.setUpdatedAt(LocalDateTime.now());
+
+        Sale updatedSale = saleRepository.save(sale);
+        return saleMapper.toDTO(updatedSale);
     }
 
     
